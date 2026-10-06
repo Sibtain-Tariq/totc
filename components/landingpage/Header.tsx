@@ -2,12 +2,40 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+    };
+
+    getUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   if (pathname === "/login" || pathname === "/register") {
     return null;
@@ -91,11 +119,13 @@ export default function Header() {
               </Link>
             </>
           ) : (
-            <button className="flex items-center gap-[10px] group transition-colors">
+            <button onClick={handleLogout} className="flex items-center gap-[10px] group transition-colors">
               <div className="relative w-[32px] h-[32px] rounded-full overflow-hidden shrink-0">
-                <Image src="/images/girl.png" alt="Lina" fill className="object-cover" />
+                <Image src="/images/girl.png" alt="Profile" fill className="object-cover" />
               </div>
-              <span className="text-[#303030] font-medium text-[16px] group-hover:text-[#4CB9BB] transition-colors">Lina</span>
+              <span className="text-[#303030] font-medium text-[16px] group-hover:text-[#4CB9BB] transition-colors">
+                {user?.user_metadata?.full_name || "Lina"}
+              </span>
               <svg className="w-4 h-4 text-[#303030] group-hover:text-[#4CB9BB] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
@@ -164,11 +194,13 @@ export default function Header() {
             </div>
           ) : (
             <div className="flex items-center justify-center gap-3 mt-4 pt-2">
-              <button className="flex items-center gap-[10px] group transition-colors">
+              <button onClick={() => { setMobileOpen(false); handleLogout(); }} className="flex items-center gap-[10px] group transition-colors">
                 <div className="relative w-[32px] h-[32px] rounded-full overflow-hidden shrink-0">
-                  <Image src="/images/girl.png" alt="Lina" fill className="object-cover" />
+                  <Image src="/images/girl.png" alt="Profile" fill className="object-cover" />
                 </div>
-                <span className="text-[#303030] font-medium text-[16px] group-hover:text-[#4CB9BB] transition-colors">Lina</span>
+                <span className="text-[#303030] font-medium text-[16px] group-hover:text-[#4CB9BB] transition-colors">
+                  {user?.user_metadata?.full_name || "Lina"}
+                </span>
                 <svg className="w-4 h-4 text-[#303030] group-hover:text-[#4CB9BB] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>

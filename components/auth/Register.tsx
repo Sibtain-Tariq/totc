@@ -1,13 +1,52 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IoEyeOffOutline } from "react-icons/io5";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Register() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
+
+  const supabase = createClient();
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess(true);
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred during registration");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="h-screen overflow-y-hidden bg-white flex items-center justify-center p-[20px] md:p-[24px] lg:p-[30px]">
@@ -64,13 +103,16 @@ export default function Register() {
             </p>
 
             {/* FORM */}
-            <form className="flex flex-col gap-6" onSubmit={(e) => { e.preventDefault(); router.push('/'); }}>
+            <form className="flex flex-col gap-6" onSubmit={handleRegister}>
               
               {/* EMAIL ADDRESS FIELD */}
               <div className="flex flex-col gap-[10px]">
                 <label className="text-[#696969] text-[13px] font-medium ml-1">Email Address</label>
                 <input 
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                   placeholder="Enter your Email Address"
                   className="w-full h-[44px] md:h-[46px] rounded-[25px] border border-[#4CB9C0] px-[20px] text-[13px] md:text-[14px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
                 />
@@ -81,6 +123,9 @@ export default function Register() {
                 <label className="text-[#696969] text-[13px] font-medium ml-1">User name</label>
                 <input 
                   type="text" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
                   placeholder="Enter your User name"
                   className="w-full h-[44px] md:h-[46px] rounded-[25px] border border-[#4CB9C0] px-[20px] text-[13px] md:text-[14px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
                 />
@@ -91,15 +136,26 @@ export default function Register() {
                 <label className="text-[#696969] text-[13px] font-medium ml-1">Password</label>
                 <div className="relative w-full">
                   <input 
-                    type="password" 
+                    type={showPassword ? "text" : "password"} 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                     placeholder="Enter your Password"
                     className="w-full h-[44px] md:h-[46px] rounded-[25px] border border-[#4CB9C0] pl-[20px] pr-[50px] text-[13px] md:text-[14px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
                   />
-                  <button type="button" aria-label="Toggle password visibility" className="absolute right-5 top-1/2 -translate-y-1/2 text-[#B0B0B0] hover:text-[#696969] transition-colors">
-                    <IoEyeOffOutline size={20} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility" className="absolute right-5 top-1/2 -translate-y-1/2 text-[#B0B0B0] hover:text-[#696969] transition-colors">
+                    {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                   </button>
                 </div>
               </div>
+
+              {error && (
+                <p className="text-red-500 text-sm text-center">{error}</p>
+              )}
+
+              {success && (
+                <p className="text-[#4CB9C0] text-sm text-center">Registration successful! Please check your email to confirm your account.</p>
+              )}
 
               {/* REMEMBER / FORGOT PASSWORD */}
               <div className="flex items-center justify-between mt-2 mb-2 px-2">
@@ -121,10 +177,13 @@ export default function Register() {
                 </a>
               </div>
 
-              {/* REGISTER BUTTON */}
-              <div className="w-full flex justify-center mt-2">
-                <button type="submit" className="w-[170px] md:w-[180px] h-[44px] md:h-[46px] bg-[#4CB9C0] text-white text-[13px] md:text-[14px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm">
-                  Register
+              {/* REGISTER BUTTONS */}
+              <div className="w-full flex justify-center gap-4 mt-2">
+                <button type="button" onClick={() => router.push("/")} className="w-[130px] md:w-[140px] h-[44px] md:h-[46px] bg-[#4CB9C0] text-white text-[13px] md:text-[14px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm">
+                  Direct Register
+                </button>
+                <button type="submit" disabled={loading} className="w-[130px] md:w-[140px] h-[44px] md:h-[46px] bg-[#4CB9C0] text-white text-[13px] md:text-[14px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                  {loading ? "Registering..." : "Register"}
                 </button>
               </div>
 

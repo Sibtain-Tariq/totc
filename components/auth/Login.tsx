@@ -1,13 +1,44 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IoEyeOffOutline } from "react-icons/io5";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Login() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const supabase = createClient();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        router.push("/");
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred during login");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="h-screen overflow-y-hidden bg-white flex items-center justify-center p-[12px] md:p-[16px] lg:p-[24px]">
@@ -64,14 +95,17 @@ export default function Login() {
             </p>
 
             {/* FORM */}
-            <form className="flex flex-col gap-8" onSubmit={(e) => { e.preventDefault(); router.push('/'); }}>
+            <form className="flex flex-col gap-8" onSubmit={handleLogin}>
               
-              {/* USERNAME FIELD */}
+              {/* EMAIL FIELD */}
               <div className="flex flex-col gap-3">
-                <label className="text-[#696969] text-[14px] font-medium ml-1">User name</label>
+                <label className="text-[#696969] text-[14px] font-medium ml-1">Email Address</label>
                 <input 
-                  type="text" 
-                  placeholder="Enter your User name"
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="Enter your Email Address"
                   className="w-full h-[48px] md:h-[50px] rounded-[25px] border border-[#4CB9C0] px-[20px] text-[14px] md:text-[15px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
                 />
               </div>
@@ -81,15 +115,22 @@ export default function Login() {
                 <label className="text-[#696969] text-[14px] font-medium ml-1">Password</label>
                 <div className="relative w-full">
                   <input 
-                    type="password" 
+                    type={showPassword ? "text" : "password"} 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                     placeholder="Enter your Password"
                     className="w-full h-[48px] md:h-[50px] rounded-[25px] border border-[#4CB9C0] pl-[20px] pr-[50px] text-[14px] md:text-[15px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
                   />
-                  <button type="button" aria-label="Toggle password visibility" className="absolute right-5 top-1/2 -translate-y-1/2 text-[#B0B0B0] hover:text-[#696969] transition-colors">
-                    <IoEyeOffOutline size={22} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility" className="absolute right-5 top-1/2 -translate-y-1/2 text-[#B0B0B0] hover:text-[#696969] transition-colors">
+                    {showPassword ? <IoEyeOutline size={22} /> : <IoEyeOffOutline size={22} />}
                   </button>
                 </div>
               </div>
+
+              {error && (
+                <p className="text-red-500 text-sm text-center -mb-2 -mt-2">{error}</p>
+              )}
 
               {/* REMEMBER / FORGOT PASSWORD */}
               <div className="flex items-center justify-between mt-2 mb-4 px-2">
@@ -111,10 +152,13 @@ export default function Login() {
                 </a>
               </div>
 
-              {/* LOGIN BUTTON */}
-              <div className="w-full flex justify-center mt-2">
-                <button type="submit" className="w-[180px] md:w-[190px] h-[48px] md:h-[50px] bg-[#4CB9C0] text-white text-[14px] md:text-[15px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm">
-                  Login
+              {/* LOGIN BUTTONS */}
+              <div className="w-full flex justify-center gap-4 mt-2">
+                <button type="button" onClick={() => router.push("/")} className="w-[140px] md:w-[150px] h-[48px] md:h-[50px] bg-[#4CB9C0] text-white text-[14px] md:text-[15px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm">
+                  Direct Login
+                </button>
+                <button type="submit" disabled={loading} className="w-[140px] md:w-[150px] h-[48px] md:h-[50px] bg-[#4CB9C0] text-white text-[14px] md:text-[15px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                  {loading ? "Logging in..." : "Login"}
                 </button>
               </div>
 

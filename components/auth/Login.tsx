@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { createClient } from "@/lib/supabase/client";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function Login() {
   const router = useRouter();
@@ -14,13 +15,29 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setResetMsg(null);
 
-    const supabase = createClient();
+    // Initialize client locally to inject dynamic cookieOptions for 'remember me'
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+    
+    let supabase;
+    if (!rememberMe) {
+      supabase = createBrowserClient(supabaseUrl, supabaseKey, {
+        cookieOptions: {
+          maxAge: undefined, // undefined makes it a session cookie
+        }
+      });
+    } else {
+      supabase = createClient();
+    }
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -34,6 +51,33 @@ export default function Login() {
       }
     } catch (err: any) {
       setError(err.message || "An error occurred during login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setError("Please enter your email address above to reset your password.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setResetMsg(null);
+
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        setError("Error sending password reset link. Please try again.");
+      } else {
+        setResetMsg("If an account exists for this email, a password reset link has been sent.");
+      }
+    } catch (err: any) {
+      setError("An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -130,13 +174,19 @@ export default function Login() {
               {error && (
                 <p className="text-red-500 text-sm text-center -mb-2 -mt-2">{error}</p>
               )}
+              
+              {resetMsg && (
+                <p className="text-[#4CB9C0] text-sm text-center -mb-2 -mt-2">{resetMsg}</p>
+              )}
 
               {/* REMEMBER / FORGOT PASSWORD */}
               <div className="flex items-center justify-between mt-2 mb-4 px-2">
-                <div className="flex items-center gap-[10px] cursor-pointer group">
+                <div className="flex items-center gap-[10px] cursor-pointer group" onClick={() => setRememberMe(!rememberMe)}>
                   <div className="relative flex items-center">
                     <input 
                       type="checkbox" 
+                      checked={rememberMe}
+                      readOnly
                       className="peer w-[16px] h-[16px] rounded-[3px] border border-gray-300 appearance-none checked:bg-[#4CB9C0] checked:border-[#4CB9C0] cursor-pointer transition-colors" 
                     />
                     {/* Custom checkmark overlay */}
@@ -146,9 +196,9 @@ export default function Login() {
                   </div>
                   <span className="text-[#696969] text-[13px] group-hover:text-[#4CB9C0] transition-colors">Remember me</span>
                 </div>
-                <a href="#" className="text-[#696969] text-[13px] hover:text-[#4CB9C0] transition-colors">
+                <button onClick={handleForgotPassword} className="text-[#696969] text-[13px] hover:text-[#4CB9C0] transition-colors bg-transparent border-none p-0 cursor-pointer">
                   Forgot Password ?
-                </a>
+                </button>
               </div>
 
               {/* LOGIN BUTTONS */}

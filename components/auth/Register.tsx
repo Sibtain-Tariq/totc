@@ -36,7 +36,11 @@ export default function Register() {
       });
 
       if (error) {
-        setError(error.message);
+        if (error.message.toLowerCase().includes("already registered")) {
+          setError("Email already registered");
+        } else {
+          setError(error.message);
+        }
       } else {
         setSuccess(true);
       }
@@ -155,26 +159,6 @@ export default function Register() {
               {success && (
                 <p className="text-[#4CB9C0] text-sm text-center">Registration successful! Please check your email to confirm your account.</p>
               )}
-
-              {/* REMEMBER / FORGOT PASSWORD */}
-              <div className="flex items-center justify-between mt-2 mb-2 px-2">
-                <div className="flex items-center gap-[8px] cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input 
-                      type="checkbox" 
-                      className="peer w-[14px] h-[14px] rounded-[3px] border border-gray-300 appearance-none checked:bg-[#4CB9C0] checked:border-[#4CB9C0] cursor-pointer transition-colors" 
-                    />
-                    {/* Custom checkmark overlay */}
-                    <svg className="absolute w-[10px] h-[10px] left-[2px] top-[2px] text-white pointer-events-none opacity-0 peer-checked:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  </div>
-                  <span className="text-[#696969] text-[12px] group-hover:text-[#4CB9C0] transition-colors">Remember me</span>
-                </div>
-                <a href="#" className="text-[#696969] text-[12px] hover:text-[#4CB9C0] transition-colors">
-                  Forgot Password ?
-                </a>
-              </div>
 
               {/* REGISTER BUTTONS */}
               <div className="w-full flex justify-center gap-4 mt-2">

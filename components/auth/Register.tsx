@@ -17,14 +17,13 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
-  const supabase = createClient();
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(false);
 
+    const supabase = createClient();
     try {
       const { error } = await supabase.auth.signUp({
         email,

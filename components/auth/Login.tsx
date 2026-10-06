@@ -17,6 +17,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [resetMsg, setResetMsg] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,10 +57,10 @@ export default function Login() {
     }
   };
 
-  const handleForgotPassword = async (e: React.MouseEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      setError("Please enter your email address above to reset your password.");
+      setError("Please enter your email address.");
       return;
     }
     setLoading(true);
@@ -74,7 +75,7 @@ export default function Login() {
       if (error) {
         setError("Error sending password reset link. Please try again.");
       } else {
-        setResetMsg("If an account exists for this email, a password reset link has been sent.");
+        setResetMsg("Password reset link sent. Please check your email.");
       }
     } catch (err: any) {
       setError("An unexpected error occurred.");
@@ -138,80 +139,113 @@ export default function Login() {
             </p>
 
             {/* FORM */}
-            <form className="flex flex-col gap-8" onSubmit={handleLogin}>
-              
-              {/* EMAIL FIELD */}
-              <div className="flex flex-col gap-3">
-                <label className="text-[#696969] text-[14px] font-medium ml-1">Email Address</label>
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="Enter your Email Address"
-                  className="w-full h-[48px] md:h-[50px] rounded-[25px] border border-[#4CB9C0] px-[20px] text-[14px] md:text-[15px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
-                />
-              </div>
-
-              {/* PASSWORD FIELD */}
-              <div className="flex flex-col gap-3">
-                <label className="text-[#696969] text-[14px] font-medium ml-1">Password</label>
-                <div className="relative w-full">
+            {isForgotPassword ? (
+              <form className="flex flex-col gap-8" onSubmit={handleForgotPassword}>
+                <div className="flex flex-col gap-3">
+                  <label className="text-[#696969] text-[14px] font-medium ml-1">Email Address</label>
                   <input 
-                    type={showPassword ? "text" : "password"} 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="Enter your Password"
-                    className="w-full h-[48px] md:h-[50px] rounded-[25px] border border-[#4CB9C0] pl-[20px] pr-[50px] text-[14px] md:text-[15px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
+                    placeholder="Enter your Email Address"
+                    className="w-full h-[48px] md:h-[50px] rounded-[25px] border border-[#4CB9C0] px-[20px] text-[14px] md:text-[15px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility" className="absolute right-5 top-1/2 -translate-y-1/2 text-[#B0B0B0] hover:text-[#696969] transition-colors">
-                    {showPassword ? <IoEyeOutline size={22} /> : <IoEyeOffOutline size={22} />}
+                </div>
+
+                {error && (
+                  <p className="text-red-500 text-sm text-center -mb-2 -mt-2">{error}</p>
+                )}
+                
+                {resetMsg && (
+                  <p className="text-[#4CB9C0] text-sm text-center -mb-2 -mt-2">{resetMsg}</p>
+                )}
+
+                <div className="w-full flex justify-center gap-4 mt-2">
+                  <button type="button" onClick={() => { setIsForgotPassword(false); setError(null); setResetMsg(null); }} className="w-[140px] md:w-[150px] h-[48px] md:h-[50px] bg-white border border-[#4CB9C0] text-[#4CB9C0] text-[14px] md:text-[15px] font-semibold rounded-full hover:bg-gray-50 transition-colors shadow-sm">
+                    Back to Login
+                  </button>
+                  <button type="submit" disabled={loading} className="w-[140px] md:w-[150px] h-[48px] md:h-[50px] bg-[#4CB9C0] text-white text-[14px] md:text-[15px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                    {loading ? "Sending..." : "Send Reset Link"}
                   </button>
                 </div>
-              </div>
-
-              {error && (
-                <p className="text-red-500 text-sm text-center -mb-2 -mt-2">{error}</p>
-              )}
-              
-              {resetMsg && (
-                <p className="text-[#4CB9C0] text-sm text-center -mb-2 -mt-2">{resetMsg}</p>
-              )}
-
-              {/* REMEMBER / FORGOT PASSWORD */}
-              <div className="flex items-center justify-between mt-2 mb-4 px-2">
-                <div className="flex items-center gap-[10px] cursor-pointer group" onClick={() => setRememberMe(!rememberMe)}>
-                  <div className="relative flex items-center">
-                    <input 
-                      type="checkbox" 
-                      checked={rememberMe}
-                      readOnly
-                      className="peer w-[16px] h-[16px] rounded-[3px] border border-gray-300 appearance-none checked:bg-[#4CB9C0] checked:border-[#4CB9C0] cursor-pointer transition-colors" 
-                    />
-                    {/* Custom checkmark overlay */}
-                    <svg className="absolute w-[12px] h-[12px] left-[2px] top-[2px] text-white pointer-events-none opacity-0 peer-checked:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  </div>
-                  <span className="text-[#696969] text-[13px] group-hover:text-[#4CB9C0] transition-colors">Remember me</span>
+              </form>
+            ) : (
+              <form className="flex flex-col gap-8" onSubmit={handleLogin}>
+                
+                {/* EMAIL FIELD */}
+                <div className="flex flex-col gap-3">
+                  <label className="text-[#696969] text-[14px] font-medium ml-1">Email Address</label>
+                  <input 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="Enter your Email Address"
+                    className="w-full h-[48px] md:h-[50px] rounded-[25px] border border-[#4CB9C0] px-[20px] text-[14px] md:text-[15px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
+                  />
                 </div>
-                <button onClick={handleForgotPassword} className="text-[#696969] text-[13px] hover:text-[#4CB9C0] transition-colors bg-transparent border-none p-0 cursor-pointer">
-                  Forgot Password ?
-                </button>
-              </div>
 
-              {/* LOGIN BUTTONS */}
-              <div className="w-full flex justify-center gap-4 mt-2">
-                <button type="button" onClick={() => router.push("/")} className="w-[140px] md:w-[150px] h-[48px] md:h-[50px] bg-[#4CB9C0] text-white text-[14px] md:text-[15px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm">
-                  Direct Login
-                </button>
-                <button type="submit" disabled={loading} className="w-[140px] md:w-[150px] h-[48px] md:h-[50px] bg-[#4CB9C0] text-white text-[14px] md:text-[15px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
-                  {loading ? "Logging in..." : "Login"}
-                </button>
-              </div>
+                {/* PASSWORD FIELD */}
+                <div className="flex flex-col gap-3">
+                  <label className="text-[#696969] text-[14px] font-medium ml-1">Password</label>
+                  <div className="relative w-full">
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="Enter your Password"
+                      className="w-full h-[48px] md:h-[50px] rounded-[25px] border border-[#4CB9C0] pl-[20px] pr-[50px] text-[14px] md:text-[15px] text-[#222222] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-1 focus:ring-[#4CB9C0] transition-shadow"
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility" className="absolute right-5 top-1/2 -translate-y-1/2 text-[#B0B0B0] hover:text-[#696969] transition-colors">
+                      {showPassword ? <IoEyeOutline size={22} /> : <IoEyeOffOutline size={22} />}
+                    </button>
+                  </div>
+                </div>
 
-            </form>
+                {error && (
+                  <p className="text-red-500 text-sm text-center -mb-2 -mt-2">{error}</p>
+                )}
+                
+                {resetMsg && (
+                  <p className="text-[#4CB9C0] text-sm text-center -mb-2 -mt-2">{resetMsg}</p>
+                )}
+
+                {/* REMEMBER / FORGOT PASSWORD */}
+                <div className="flex items-center justify-between mt-2 mb-4 px-2">
+                  <div className="flex items-center gap-[10px] cursor-pointer group" onClick={() => setRememberMe(!rememberMe)}>
+                    <div className="relative flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={rememberMe}
+                        readOnly
+                        className="peer w-[16px] h-[16px] rounded-[3px] border border-gray-300 appearance-none checked:bg-[#4CB9C0] checked:border-[#4CB9C0] cursor-pointer transition-colors" 
+                      />
+                      {/* Custom checkmark overlay */}
+                      <svg className="absolute w-[12px] h-[12px] left-[2px] top-[2px] text-white pointer-events-none opacity-0 peer-checked:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                    <span className="text-[#696969] text-[13px] group-hover:text-[#4CB9C0] transition-colors">Remember me</span>
+                  </div>
+                  <button type="button" onClick={() => { setIsForgotPassword(true); setError(null); setResetMsg(null); }} className="text-[#696969] text-[13px] hover:text-[#4CB9C0] transition-colors bg-transparent border-none p-0 cursor-pointer">
+                    Forgot Password ?
+                  </button>
+                </div>
+
+                {/* LOGIN BUTTONS */}
+                <div className="w-full flex justify-center gap-4 mt-2">
+                  <button type="button" onClick={() => router.push("/")} className="w-[140px] md:w-[150px] h-[48px] md:h-[50px] bg-[#4CB9C0] text-white text-[14px] md:text-[15px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm">
+                    Direct Login
+                  </button>
+                  <button type="submit" disabled={loading} className="w-[140px] md:w-[150px] h-[48px] md:h-[50px] bg-[#4CB9C0] text-white text-[14px] md:text-[15px] font-semibold rounded-full hover:bg-[#3ca4a6] transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                    {loading ? "Logging in..." : "Login"}
+                  </button>
+                </div>
+
+              </form>
+            )}
           </div>
 
         </div>

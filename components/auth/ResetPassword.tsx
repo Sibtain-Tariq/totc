@@ -86,7 +86,7 @@ export default function ResetPassword() {
             {success ? (
               <div className="flex flex-col items-center">
                 <p className="text-[#4CB9C0] text-center mb-8 font-medium">
-                  Your password has been updated successfully!
+                  Password updated successfully.
                 </p>
                 <Link 
                   href="/login" 

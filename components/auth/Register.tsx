@@ -25,7 +25,7 @@ export default function Register() {
 
     const supabase = createClient();
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -41,6 +41,9 @@ export default function Register() {
         } else {
           setError(error.message);
         }
+      } else if (data?.user?.identities && data.user.identities.length === 0) {
+        // Supabase email enumeration protection returns success but empty identities when email exists
+        setError("Email already registered");
       } else {
         setSuccess(true);
       }
